@@ -115,6 +115,7 @@ public class DownloadService extends IntentService
         JSONObject body = new JSONObject();
         body.put("source_incremental", sourceIncremental);
         body.put("target_incremental", mInfo.getIncremental());
+        body.put("version", "cm-" + SystemProperties.get("ro.cm.version").substring(0,2));
         return body;
     }
 
