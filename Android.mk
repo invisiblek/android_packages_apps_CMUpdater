@@ -30,8 +30,6 @@ LOCAL_AAPT_FLAGS := \
     --extra-packages android.support.v7.cardview \
     --extra-packages android.support.v7.recyclerview
 
-LOCAL_AAPT_FLAGS += --rename-manifest-package org.lineageos.updater
-
 LOCAL_PACKAGE_NAME := CMUpdater
 
 LOCAL_PROGUARD_FLAGS := -include $(LOCAL_PATH)/proguard.flags
