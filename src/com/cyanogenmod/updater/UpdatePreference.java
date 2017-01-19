@@ -14,6 +14,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
+import android.os.SystemProperties;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceViewHolder;
 import android.view.LayoutInflater;
@@ -82,6 +83,10 @@ public class UpdatePreference extends Preference implements OnClickListener, OnL
                     break;
                 case STYLE_DOWNLOADED:
                     mOnActionListener.onStartUpdate(UpdatePreference.this);
+                    break;
+                case STYLE_INSTALLED:
+                    if (SystemProperties.get("persist.lineage.install.any").equals("true"))
+                        mOnActionListener.onStartUpdate(UpdatePreference.this);
                     break;
                 case STYLE_DOWNLOADING:
                     mOnActionListener.onStopDownload(UpdatePreference.this);
@@ -271,7 +276,12 @@ public class UpdatePreference extends Preference implements OnClickListener, OnL
             case STYLE_INSTALLED:
                 mStopDownloadButton.setVisibility(View.GONE);
                 mProgressBar.setVisibility(View.GONE);
-                mButton.setVisibility(View.GONE);
+                if (SystemProperties.get("persist.lineage.install.any").equals("true")) {
+                    mButton.setText(mContext.getString(R.string.install_button));
+                    mButton.setVisibility(View.VISIBLE);
+                } else {
+                    mButton.setVisibility(View.GONE);
+                }
                 mTitleText.setText(String.format("%1$s %2$s",
                         mBuildType, mContext.getString(R.string.type_installed)));
                 break;
