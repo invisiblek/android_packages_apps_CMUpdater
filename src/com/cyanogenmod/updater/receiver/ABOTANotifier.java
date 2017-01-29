@@ -19,7 +19,6 @@ import android.support.v4.app.NotificationCompat.Builder;
 
 import com.cyanogenmod.updater.R;
 import com.cyanogenmod.updater.utils.Utils;
-import com.cyanogenmod.updater.service.ZipExtractionService.ZipExtractionStatusConstants;
 
 import java.io.File;
 
@@ -32,57 +31,25 @@ public class ABOTANotifier {
     public static void notifyOngoingABOTA(Context context, int progress, int status) {
         Builder builder = new Builder(context).setSmallIcon(R.drawable.ic_system_update);
 
-        if (progress < 0) {
-            ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
-                .cancel(R.string.installing_package);
+        switch (status) {
+            case UpdateStatusConstants.DOWNLOADING:
+                builder.setProgress(100, progress, false)
+                       .setOngoing(true)
+                       .setContentText(String.format("%1$d%%", progress))
+                       .setContentTitle(context.getString(R.string.installing_package));
+                break;
 
-            switch (status) {
-                case ZipExtractionStatusConstants.ERRORED:
-                    builder.setContentTitle(context.getString(R.string.error_title))
-                           .setContentText(String.format(context.getString(R.string.error_extracting_zip, status)));
-                    break;
-                default:
-                    builder.setContentTitle(context.getString(R.string.error_title))
-                           .setContentText(String.format(context.getString(R.string.error_update_engine, status)));
-                    break;
-            }
-
-        } else {
-            switch (status) {
-                case ZipExtractionStatusConstants.EXTRACTING:
+            case UpdateStatusConstants.FINALIZING:
+                if (progress == 0) {
                     builder.setProgress(0, 0, true)
                            .setOngoing(true)
-                           .setContentTitle(context.getString(R.string.processing_zip_file));
-                    break;
-                case UpdateStatusConstants.DOWNLOADING:
+                           .setContentTitle(context.getString(R.string.finalizing_package));
+                } else if (progress < 100) {
                     builder.setProgress(100, progress, false)
                            .setOngoing(true)
                            .setContentText(String.format("%1$d%%", progress))
-                           .setContentTitle(context.getString(R.string.installing_package));
-                    break;
-
-                case UpdateStatusConstants.FINALIZING:
-                    if (progress == 0) {
-                        builder.setProgress(0, 0, true)
-                               .setOngoing(true)
-                               .setContentTitle(context.getString(R.string.finalizing_package));
-                    } else if (progress < 100) {
-                        builder.setProgress(100, progress, false)
-                               .setOngoing(true)
-                               .setContentText(String.format("%1$d%%", progress))
-                               .setContentTitle(context.getString(R.string.preparing_ota_first_boot));
-                    } else {
-                        ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
-                            .cancel(R.string.installing_package);
-
-                        builder.setContentText(context.getString(R.string.installing_package_finished))
-                               .addAction(R.drawable.ic_tab_install,
-                                   context.getString(R.string.not_action_install_reboot),
-                                   createRebootPendingIntent(context));
-                    }
-                    break;
-
-                case UpdateStatusConstants.UPDATED_NEED_REBOOT:
+                           .setContentTitle(context.getString(R.string.preparing_ota_first_boot));
+                } else {
                     ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
                         .cancel(R.string.installing_package);
 
@@ -90,13 +57,23 @@ public class ABOTANotifier {
                            .addAction(R.drawable.ic_tab_install,
                                context.getString(R.string.not_action_install_reboot),
                                createRebootPendingIntent(context));
-                    break;
+                }
+                break;
 
-                default:
-                    builder.setContentTitle(context.getString(R.string.error_title))
-                           .setContentText(String.format(context.getString(R.string.error_update_engine, status)));
-                    break;
-            }
+            case UpdateStatusConstants.UPDATED_NEED_REBOOT:
+                ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
+                    .cancel(R.string.installing_package);
+
+                builder.setContentText(context.getString(R.string.installing_package_finished))
+                       .addAction(R.drawable.ic_tab_install,
+                           context.getString(R.string.not_action_install_reboot),
+                           createRebootPendingIntent(context));
+                break;
+
+            default:
+                builder.setContentTitle(context.getString(R.string.error_title))
+                       .setContentText(String.format(context.getString(R.string.error_update_engine, status)));
+                break;
         }
 
         ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))

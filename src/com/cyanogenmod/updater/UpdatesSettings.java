@@ -49,7 +49,6 @@ import com.cyanogenmod.updater.receiver.ABOTANotifier;
 import com.cyanogenmod.updater.receiver.DownloadReceiver;
 import com.cyanogenmod.updater.service.ABOTAService;
 import com.cyanogenmod.updater.service.UpdateCheckService;
-import com.cyanogenmod.updater.service.ZipExtractionService;
 import com.cyanogenmod.updater.utils.UpdateFilter;
 import com.cyanogenmod.updater.utils.Utils;
 
@@ -121,15 +120,6 @@ public class UpdatesSettings extends PreferenceFragment implements
                     }
                 }
                 updateLayout();
-            } else if (ZipExtractionService.ACTION_EXTRACT_ERRORED.equals(action)) {
-                if (mProgressDialog != null) {
-                    mProgressDialog.dismiss();
-                    mProgressDialog = null;
-                }
-
-                mStartUpdateVisible = false;
-                ABOTAService.setABUpdateRunning(false);
-                showSnack(mContext.getString(R.string.processing_zip_failed));
             } else if (ABOTAService.ACTION_UPDATE_INSTALL_FINISHED.equals(action)) {
                 String filename = intent.getStringExtra(ABOTAService.EXTRA_ZIP_NAME);
                 UpdatePreference pref = (UpdatePreference) mUpdatesList.findPreference(filename);
@@ -266,7 +256,6 @@ public class UpdatesSettings extends PreferenceFragment implements
 
         IntentFilter filter = new IntentFilter(UpdateCheckService.ACTION_CHECK_FINISHED);
         filter.addAction(DownloadReceiver.ACTION_DOWNLOAD_STARTED);
-        filter.addAction(ZipExtractionService.ACTION_EXTRACT_ERRORED);
         filter.addAction(ABOTAService.ACTION_UPDATE_INSTALL_FINISHED);
         filter.addAction(ABOTAService.ACTION_UPDATE_INSTALL_ERRORED);
         mContext.registerReceiver(mReceiver, filter);

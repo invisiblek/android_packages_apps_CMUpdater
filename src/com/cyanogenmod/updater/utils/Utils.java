@@ -32,8 +32,8 @@ import android.util.Log;
 
 import com.cyanogenmod.updater.R;
 import com.cyanogenmod.updater.misc.Constants;
+import com.cyanogenmod.updater.service.ABOTAService;
 import com.cyanogenmod.updater.service.UpdateCheckService;
-import com.cyanogenmod.updater.service.ZipExtractionService;
 import com.cyanogenmod.updater.UpdatePreference;
 
 import java.io.File;
@@ -155,10 +155,9 @@ public class Utils {
     }
 
     public static void triggerUpdateAB(Context context, String updateFileName) {
-        String filepath = Utils.makeUpdateFolder(context).getPath() + "/" + updateFileName;
-        Intent intent = new Intent(context, ZipExtractionService.class);
-        intent.putExtra(ZipExtractionService.EXTRA_ZIP_NAME, filepath);
-        context.startService(intent);
+        Intent otaIntent = new Intent(context, ABOTAService.class);
+        otaIntent.putExtra(ABOTAService.EXTRA_ZIP_NAME, updateFileName);
+        context.startService(otaIntent);
     }
 
     public static void triggerUpdate(Context context, String updateFileName) throws IOException {

@@ -23,11 +23,16 @@ import android.util.Log;
 import com.cyanogenmod.updater.receiver.ABOTANotifier;
 import com.cyanogenmod.updater.utils.Utils;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Scanner;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class ABOTAService extends IntentService {
 
@@ -45,11 +50,6 @@ public class ABOTAService extends IntentService {
 
     private boolean errorCaught = false;
     private String mFilename;
-
-    // Internal eror codes
-    public class ErrorCodes {
-        public static final int ERROR_FILE_NOT_FOUND = 2001;
-    }
 
     public ABOTAService() {
         super("ABOTAService");
@@ -132,26 +132,45 @@ public class ABOTAService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         errorCaught = false;
         mContext = getApplicationContext();
-        String extractionSite = Utils.makeUpdateFolder(mContext).getPath() + "/unzipped/";
         mFilename = intent.getStringExtra(EXTRA_ZIP_NAME);
 
         try {
-            Scanner sc = new Scanner(new File(extractionSite + "payload_properties.txt"));
+            String updatePackagePath = Utils.makeUpdateFolder(mContext).getPath() + "/" + mFilename;
+            ZipFile zipFile = new ZipFile(updatePackagePath);
+            Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+            long payloadOffset = 0;
+            long offset = 0;
             List<String> lines = new ArrayList<String>();
-            while (sc.hasNextLine()) {
-                lines.add(sc.nextLine());
+
+            while (zipEntries.hasMoreElements()) {
+                ZipEntry entry = (ZipEntry) zipEntries.nextElement();
+                long fileSize = 0;
+                long extra = entry.getExtra() == null ? 0 : entry.getExtra().length;
+                offset += 30 + entry.getName().length() + extra;
+
+                if (!entry.isDirectory()) {
+                    fileSize = entry.getCompressedSize();
+                    if ("payload.bin".equals(entry.getName())) {
+                        payloadOffset = offset;
+                    } else if ("payload_properties.txt".equals(entry.getName())) {
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(zipFile.getInputStream(entry)));
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            lines.add(line);
+                        }
+                    }
+                }
+                offset += fileSize;
             }
 
-            String[] header = lines.toArray(new String[0]);
             UpdateEngine mUpdateEngine = new UpdateEngine();
             mUpdateEngine.bind(new UpdateEngineCB());
-            mUpdateEngine.applyPayload("file://" + extractionSite + "payload.bin", (long) 0, (long) 0, header);
+            mUpdateEngine.applyPayload("file://" + updatePackagePath, offset, 0, lines.toArray(new String[lines.size()]));
 
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             errorCaught = true;
             Log.e(TAG, "Failed to read extracted zip", e);
             Intent errorIntent = new Intent(ACTION_UPDATE_INSTALL_ERRORED);
-            errorIntent.putExtra(EXTRA_ERROR_CODE, ErrorCodes.ERROR_FILE_NOT_FOUND);
             sendBroadcast(errorIntent);
         } catch (ServiceSpecificException e) {
             errorCaught = true;

@@ -96,8 +96,6 @@
     <string name="reboot_button">Reboot</string>
 
     <!-- A/B OTA -->
-    <string name="processing_zip_file">Processing update package</string>
-    <string name="processing_zip_failed">Uh oh, something went wrong...processing update package failed</string>
     <string name="installing_package">Installing update package</string>
     <string name="installing_package_finished">Update installed. Please reboot.</string>
     <string name="finalizing_package">Finalizing package installation</string>
@@ -107,6 +105,5 @@
     <string name="ab_update_finished_message">The update has been succesfully installed. Please reboot your device at your convenience.</string>
     <string name="installing_zip_failed">The update failed. Error code: <xliff:g id="errorCode">%d</xliff:g></string>
     <string name="error_update_engine">Failure updating. Error code: <xliff:g id="errorCode">%d</xliff:g></string>
-    <string name="error_extracting_zip">Failure processing update. Error code: <xliff:g id="errorCode">%d</xliff:g></string>
     <string name="error_title">Error</string>
 </resources>
